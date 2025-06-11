@@ -1,0 +1,14 @@
+[
+    {
+        "function": "k",
+        "label": "Linear"
+    },
+    {
+        "function": "r*A*(1-A/K)",
+        "label": "Saturated"
+    },
+    {
+        "function": "-a*A^2",
+        "label": "Avoidant"
+    }
+]
