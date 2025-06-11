@@ -8,8 +8,7 @@
 
 typedef struct data {
     std::string function;
-    double x0;
-    double y0;
+    std::string label;
 } data;
 
 class JSONobject{
