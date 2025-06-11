@@ -1,5 +1,9 @@
 #include "./Infix_Tools.hh"
 
+static bool isOperator(char c) {
+    return c=='+' || c=='-' || c=='*' || c=='/' || c=='^';
+}
+
 double InfixTools::apply(double a, double b, char op) {
     switch(op) {
         case '+':
@@ -30,12 +34,21 @@ int InfixTools::precedence(char c) {
     }   
 }
 
-std::string InfixTools::infix_to_postfix(std::string infix_expr) { // TODO: Filter out spaces
+std::string InfixTools::infix_to_postfix(std::string infix_expr) {
     std::stack<char> infix_stack;
+    char prev = '\0';
     std::string postfix;
     
     for(int i=0;i<infix_expr.length();i++) {
         char c = infix_expr[i];
+
+        // Filter spasi/tab
+        if(c==' ' || c=='\t') continue;
+
+        // Konversi -x ke 0-x
+        if(c=='-' && (prev=='\0' || prev=='(' || isOperator(prev))) {
+            postfix += '0';
+        }
 
         if((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9')) {
             postfix += c;
@@ -51,12 +64,14 @@ std::string InfixTools::infix_to_postfix(std::string infix_expr) { // TODO: Filt
                 return "";
             }
             infix_stack.pop();
-        } else {
+        } else if(isOperator(c)) {
             while(!infix_stack.empty() && precedence(c)<=precedence(infix_stack.top())) {
                 postfix += infix_stack.top();
                 infix_stack.pop();
             }
             infix_stack.push(c);
+        } else {
+            throw std::invalid_argument(std::string("Invalid character in expression: ")+c);
         }
     }
     
@@ -73,7 +88,6 @@ std::string InfixTools::infix_to_postfix(std::string infix_expr) { // TODO: Filt
     return postfix;
 }
 
-
 //
 // Contoh variable_dict dgn. fungsi "(1-k/A)^2":
 // std::map<char, double> variable_dict = {{'k', 2.0}, {'A', 0.5}};
@@ -89,7 +103,7 @@ double InfixTools::evalute_postfix_func(std::string postfix_expr, std::map<char,
         if(std::isalnum(static_cast<unsigned char>(c))) { // If alphanumeric
             if(std::isdigit(static_cast<unsigned char>(c))) { // Digit
                 postfix_stack.push(c-'0');
-            } else { // Lookup variable
+            } else { // Lookup variable dengan binary search O(logn)
                 auto it = variable_dict.find(c);
                 if(it==variable_dict.end()) {
                     throw std::invalid_argument(std::string("Variable in function undefined in map: ") + c);

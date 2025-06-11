@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <map>
+#include <vector>
 
 class SolverClient {
     private:
@@ -21,7 +23,7 @@ class SolverClient {
         void define_socket();
         void connect_socket();
         void destroy();
-        void request();
+        void request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target);
 };
 
 #endif

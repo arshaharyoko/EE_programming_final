@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <iostream>
+#include <vector>
+#include <map>
 
 #include "ODE_Solver.hh"
 
@@ -20,7 +22,6 @@ class SolverAPI {
         struct sockaddr_in address;
         int addrlen = sizeof(address);
         int opt = 1;
-        char message_recv[100];
         int recv_size;
         bool loop = true;
 

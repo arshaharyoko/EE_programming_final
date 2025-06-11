@@ -1,5 +1,6 @@
 #ifndef H_ODE_SOLVER
 #define H_ODE_SOLVER
+#include "Infix_Tools.hh"
 #include <array>
 
 class ODESolver {
@@ -10,8 +11,7 @@ class ODESolver {
         double t, y;
 
     public:
-        std::array<double, 2> rk2solve();
-        double func(double t, double y);
+        std::array<double, 2> rk2solve(std::string functionexpr, std::map<char, double> variable_dict, char y0_var, double T);
 };
 
 #endif

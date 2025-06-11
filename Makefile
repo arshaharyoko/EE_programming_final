@@ -3,11 +3,11 @@ CXXFLAGS := -std=c++11 -Wall -I.
 
 CLIENT_DIR := Client
 
-SERVER_SRCS := Solver_API.cc ODE_Solver.cc Server.cc
+SERVER_SRCS := Solver_API.cc ODE_Solver.cc Infix_Tools.cc Server.cc
 SERVER_OBJS := $(SERVER_SRCS:.cc=.o)
 SERVER_BIN := server
 
-CLIENT_SRCS := $(CLIENT_DIR)/Solver_Client.cc $(CLIENT_DIR)/Mock_Client.cc
+CLIENT_SRCS := $(CLIENT_DIR)/Solver_Client.cc $(CLIENT_DIR)/json_parser.cc $(CLIENT_DIR)/Mock_Client.cc
 CLIENT_OBJS := $(CLIENT_SRCS:.cc=.o)
 CLIENT_BIN := client
 

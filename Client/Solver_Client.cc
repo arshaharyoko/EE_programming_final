@@ -28,13 +28,21 @@ void SolverClient::destroy() {
     close(sockfd);
 }
 
-void SolverClient::request() {
-    std::cout << "Message: ";
-    std::getline(std::cin, message);
+void SolverClient::request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target) {
+    int function_len = htonl(function.size());
+    send(sockfd, &function_len, sizeof(function_len), 0);
+    send(sockfd, function.c_str(), function.size(), 0);
+    send(sockfd, &primary_variable, sizeof(primary_variable), 0);
+    send(sockfd, &integrator_target, sizeof(integrator_target), 0);
 
-    send(sockfd, message.c_str(), message.size(), 0);
+    int map_count = variable_map.size();
+    send(sockfd, &map_count, sizeof(map_count), 0);
+
+    std::vector<std::pair<char, double>> map_buffer(variable_map.begin(), variable_map.end());
+    send(sockfd, map_buffer.data(), map_buffer.size()*sizeof(std::pair<char, double>), 0);
+
     if(recv(sockfd, message_recv, sizeof(message_recv) - 1, 0)!=0) {
-        std::cout << "Server: " << message_recv << std::endl;
+        std::cout << "Solution from server: " << message_recv << std::endl;
         memset(message_recv, 0, sizeof(message_recv));
     } else {
         std::cerr << "Error recieving message/s" << std::endl;

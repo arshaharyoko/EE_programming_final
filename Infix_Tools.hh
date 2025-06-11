@@ -8,6 +8,8 @@
 #include <cmath>
 #include <iostream>
 
+static bool isOperator(char c);
+
 class InfixTools {
     private:
         double apply(double a, double b, char op);
