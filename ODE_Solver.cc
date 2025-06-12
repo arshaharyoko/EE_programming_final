@@ -8,9 +8,11 @@ std::array<double, 2> ODESolver::rk2solve(std::string functionexpr, std::map<cha
     
     double ti = 0;
     double yi = variable_dict[y0_var];
-    double prev_yi = yi;
+
     // int numSteps = static_cast<int>(1.0 / stepSize + 0.5);
     while(yi<T){
+        double prev_ti = ti;
+        double prev_yi = yi;
         k1 = infix_tools.evalute_postfix_func(postfix_function, variable_dict);
         tMid = ti + (stepSize/2);
         yMid = yi + (stepSize/2)*k1;
@@ -20,7 +22,9 @@ std::array<double, 2> ODESolver::rk2solve(std::string functionexpr, std::map<cha
         yi = yi + stepSize*k2;
 
         if(yi<=0) break;
-        std::cout << ti << std::endl;
+        double slope   = (y - prev_yi) / (t - prev_ti);
+        if(std::abs(slope)<0.005) break;
+        std::cout << ti << " | " << yi << std::endl;
     }
 
     std::cout << "Solution: " << ti << " & " << yi << std::endl; 
