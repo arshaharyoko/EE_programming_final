@@ -106,7 +106,7 @@ int main() {
                 int idx = formulas.get_label_idx("Avoidant");
                 variable_dict.insert({'A', affectionPoints});
                 variable_dict.insert({'a', response});
-                ode_solver.request(formulas.get_function(idx), variable_dict, 'A', 100.0);
+                ode_solver.request(formulas.get_function(idx), variable_dict, 'A', 50.0);
                 break;
             }
             default:
