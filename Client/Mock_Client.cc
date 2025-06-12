@@ -37,14 +37,13 @@ int main() {
     SolverClient ode_solver;
     JSONDataObject formulas;
     std::map<char, double> variable_dict;
-
-    ode_solver.define_socket();
-    ode_solver.connect_socket();
     
     formulas.parseJSON(formulas.openFile("./formulas.json"));
 
     int choice = 0;
     while (true) {
+        ode_solver.define_socket();
+        ode_solver.connect_socket();
         variable_dict = {}; // Reinitialize/clear variable_dict
         cout << "\n--- Love Calculator ---" << endl;
         cout << "1. Linear Partner" << endl;
@@ -113,9 +112,9 @@ int main() {
             default:
                 cout << "\nInvalid choice. Please try again." << endl;
         }
+        ode_solver.destroy();
     }
 
     cout << "\nThank you for using the Love Calculator. Goodbye!" << endl;
-    ode_solver.destroy();
     return 0;
 }

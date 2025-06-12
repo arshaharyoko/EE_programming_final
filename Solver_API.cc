@@ -23,7 +23,9 @@ void SolverAPI::listen_socket() {
     if(listen(sockfd, 3)<0) {
         perror("Listening failure.");
     }
+}
 
+void SolverAPI::accept_socket_connection() {
     if((sock_conn = accept(sockfd, (struct sockaddr*)&address, (socklen_t*)&addrlen))<0) {
         perror("Connection failure.");   
     } else {
@@ -31,8 +33,11 @@ void SolverAPI::listen_socket() {
     }
 }
 
+void SolverAPI::destroy_socket_connection() {
+    close(sock_conn);
+}
+
 void SolverAPI::destroy() {
-    loop = false;
     close(sock_conn);
     close(sockfd);
 }
@@ -41,9 +46,10 @@ void SolverAPI::serve() {
     ODESolver solver;
     SolverAPI::define_socket();
     SolverAPI::bind_socket();
+    SolverAPI::listen_socket();
 
     while(loop) {
-        SolverAPI::listen_socket();
+        SolverAPI::accept_socket_connection();
 
         int function_len;
         if(recv(sock_conn, &function_len, sizeof(function_len), 0)<=0) {
@@ -76,10 +82,13 @@ void SolverAPI::serve() {
         if(recv(sock_conn, map_buffer.data(), total_bytes, 0)<=0) {
             throw std::runtime_error("Error receiving variable map.");
         }
+
         std::map<char, double> variable_map(map_buffer.begin(), map_buffer.end());
-        
         std::array<double, 2> solution = solver.rk2solve(function, variable_map, primary_variable, integration_target);
         std::string solution_str = std::to_string(solution[0]);
         send(sock_conn, solution_str.c_str(), solution_str.size(), 0);
+        SolverAPI::destroy_socket_connection();
     }
+
+    SolverAPI::destroy();
 }

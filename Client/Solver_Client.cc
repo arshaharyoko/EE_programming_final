@@ -23,8 +23,6 @@ void SolverClient::connect_socket() {
 }
 
 void SolverClient::destroy() {
-    loop = 0;
-    close(sock_conn);
     close(sockfd);
 }
 
@@ -41,9 +39,14 @@ void SolverClient::request(std::string function, std::map<char, double> variable
     std::vector<std::pair<char, double>> map_buffer(variable_map.begin(), variable_map.end());
     send(sockfd, map_buffer.data(), map_buffer.size()*sizeof(std::pair<char, double>), 0);
 
-    if(recv(sockfd, message_recv, sizeof(message_recv) - 1, 0)!=0) {
-        std::cout << "Solution from server: " << message_recv << std::endl;
-        memset(message_recv, 0, sizeof(message_recv));
+    std::string solution;
+    char buf[32];
+    int n;
+    while((n = recv(sockfd, buf, sizeof(buf), 0))>0) {
+        solution.append(buf, n);
+    }
+    if(!solution.empty()) {
+        std::cout << "Solution from server: " << solution << std::endl;
     } else {
         std::cerr << "Error recieving message/s" << std::endl;
     }

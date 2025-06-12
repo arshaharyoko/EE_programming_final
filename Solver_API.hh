@@ -29,6 +29,8 @@ class SolverAPI {
         void define_socket();
         void bind_socket();
         void listen_socket();
+        void accept_socket_connection();
+        void destroy_socket_connection();
 
     public:
         void destroy();
