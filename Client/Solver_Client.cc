@@ -26,7 +26,7 @@ void SolverClient::destroy() {
     close(sockfd);
 }
 
-void SolverClient::request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target) {
+int SolverClient::request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target) {
     int function_len = htonl(function.size());
     send(sockfd, &function_len, sizeof(function_len), 0);
     send(sockfd, function.c_str(), function.size(), 0);
@@ -47,6 +47,12 @@ void SolverClient::request(std::string function, std::map<char, double> variable
     }
     if(!solution.empty()) {
         std::cout << "Solution from server: " << solution << std::endl;
+        try {
+            return std::stoi(solution);
+        } catch (...) {
+            std::cerr << "Invalid integer in response" << std::endl;
+            return -1;
+        }
     } else {
         std::cerr << "Error recieving message/s" << std::endl;
     }

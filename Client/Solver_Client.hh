@@ -23,7 +23,7 @@ class SolverClient {
         void define_socket();
         void connect_socket();
         void destroy();
-        void request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target);
+        int request(std::string function, std::map<char, double> variable_map, char primary_variable, double integrator_target);
 };
 
 #endif
