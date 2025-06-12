@@ -55,63 +55,67 @@ void SolverAPI::serve() {
 
     while(loop) {
         SolverAPI::accept_socket_connection();
+        try { // Jika tiba-tiba terminate
+            int function_len;
+            if(recv(sock_conn, &function_len, sizeof(function_len), 0)<=0) {
+                throw std::runtime_error("Error recieving function length.");
+            }
+            function_len = ntohl(function_len);
 
-        int function_len;
-        if(recv(sock_conn, &function_len, sizeof(function_len), 0)<=0) {
-            throw std::runtime_error("Error recieving function length.");
+            std::string function(function_len, '\0');
+            if(recv(sock_conn, &function[0], function_len, 0)<=0) {
+                throw std::runtime_error("Error recieving function string.");
+            }
+
+            char primary_variable;
+            if(recv(sock_conn, &primary_variable, sizeof(primary_variable), 0)<=0) {
+                throw std::runtime_error("Error recieving primary variable character.");
+            }
+
+            double integration_target;
+            if(recv(sock_conn, &integration_target, sizeof(integration_target), 0)<=0) {
+                throw std::runtime_error("Error recieving integration target floating point integer.");
+            }
+
+            int map_count;
+            if(recv(sock_conn, &map_count, sizeof(map_count), 0)<=0) {
+                throw std::runtime_error("Error recieving variable map size.");
+            }
+
+            std::vector<std::pair<char, double>> map_buffer(map_count);
+            size_t total_bytes = map_count*sizeof(std::pair<char, double>);
+            if(recv(sock_conn, map_buffer.data(), total_bytes, 0)<=0) {
+                throw std::runtime_error("Error receiving variable map.");
+            }
+
+            std::map<char, double> variable_map(map_buffer.begin(), map_buffer.end());
+            std::array<double, 2> solution = solver.rk2solve(function, variable_map, primary_variable, integration_target);
+
+            std::string solution_str = std::to_string(solution[0]);
+            send(sock_conn, solution_str.c_str(), solution_str.size(), 0);
+            SolverAPI::destroy_socket_connection();
+
+            std::string rec = "{";
+            rec += "\"function\":\"" + function + "\",";
+            rec += "\"primary_variable\":\"" + std::string(1, primary_variable) + "\",";
+            rec += "\"integration_target\":" + std::to_string(integration_target) + ",";
+            rec += "\"variable_map\":{";
+            for (auto& kv : variable_map) {
+                rec += "\"" + std::string(1, kv.first) + "\":" + std::to_string(kv.second) + ",";
+            }
+            if (!variable_map.empty()) rec.pop_back();
+            rec += "},";
+            rec += "\"solution\":" + std::to_string(solution[0]);
+            rec += "}";
+
+            uint32_t len = static_cast<uint32_t>(rec.size());
+            log_file.write(reinterpret_cast<char*>(&len), sizeof(len));
+            log_file.write(rec.data(), rec.size());
+            log_file.flush();
+        } catch(const std::exception& ex) {
+            std::cerr << "Client error: " << ex.what() << std::endl;
         }
-        function_len = ntohl(function_len);
-
-        std::string function(function_len, '\0');
-        if(recv(sock_conn, &function[0], function_len, 0)<=0) {
-            throw std::runtime_error("Error recieving function string.");
-        }
-
-        char primary_variable;
-        if(recv(sock_conn, &primary_variable, sizeof(primary_variable), 0)<=0) {
-            throw std::runtime_error("Error recieving primary variable character.");
-        }
-
-        double integration_target;
-        if(recv(sock_conn, &integration_target, sizeof(integration_target), 0)<=0) {
-            throw std::runtime_error("Error recieving integration target floating point integer.");
-        }
-
-        int map_count;
-        if(recv(sock_conn, &map_count, sizeof(map_count), 0)<=0) {
-            throw std::runtime_error("Error recieving variable map size.");
-        }
-
-        std::vector<std::pair<char, double>> map_buffer(map_count);
-        size_t total_bytes = map_count*sizeof(std::pair<char, double>);
-        if(recv(sock_conn, map_buffer.data(), total_bytes, 0)<=0) {
-            throw std::runtime_error("Error receiving variable map.");
-        }
-
-        std::map<char, double> variable_map(map_buffer.begin(), map_buffer.end());
-        std::array<double, 2> solution = solver.rk2solve(function, variable_map, primary_variable, integration_target);
-
-        std::string solution_str = std::to_string(solution[0]);
-        send(sock_conn, solution_str.c_str(), solution_str.size(), 0);
         SolverAPI::destroy_socket_connection();
-
-        std::string rec = "{";
-        rec += "\"function\":\"" + function + "\",";
-        rec += "\"primary_variable\":\"" + std::string(1, primary_variable) + "\",";
-        rec += "\"integration_target\":" + std::to_string(integration_target) + ",";
-        rec += "\"variable_map\":{";
-        for (auto& kv : variable_map) {
-            rec += "\"" + std::string(1, kv.first) + "\":" + std::to_string(kv.second) + ",";
-        }
-        if (!variable_map.empty()) rec.pop_back();
-        rec += "},";
-        rec += "\"solution\":" + std::to_string(solution[0]);
-        rec += "}";
-
-        uint32_t len = static_cast<uint32_t>(rec.size());
-        log_file.write(reinterpret_cast<char*>(&len), sizeof(len));
-        log_file.write(rec.data(), rec.size());
-        log_file.flush();
     }
 
     SolverAPI::destroy();
