@@ -18,12 +18,7 @@ std::array<double, 2> ODESolver::rk2solve(std::string functionexpr, std::map<cha
         k2 = infix_tools.evalute_postfix_func(postfix_function, variable_dict);
         ti = ti + stepSize;
         yi = yi + stepSize*k2;
-
-        // REMOVE THIS AND FIX FUNCTIONS
-        if(yi<prev_yi) {
-            ti = -1;
-            break;
-        }
+        std::cout << ti << std::endl;
     }
 
     std::cout << "Solution: " << ti << " & " << yi << std::endl; 
