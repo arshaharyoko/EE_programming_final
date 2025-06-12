@@ -48,6 +48,11 @@ void SolverAPI::serve() {
     SolverAPI::bind_socket();
     SolverAPI::listen_socket();
 
+    std::ofstream log_file("records.bin", std::ios::binary | std::ios::app);
+    if(!log_file) {
+        std::cerr << "Failed to open records.bin\n";
+    }
+
     while(loop) {
         SolverAPI::accept_socket_connection();
 
@@ -85,9 +90,28 @@ void SolverAPI::serve() {
 
         std::map<char, double> variable_map(map_buffer.begin(), map_buffer.end());
         std::array<double, 2> solution = solver.rk2solve(function, variable_map, primary_variable, integration_target);
+
         std::string solution_str = std::to_string(solution[0]);
         send(sock_conn, solution_str.c_str(), solution_str.size(), 0);
         SolverAPI::destroy_socket_connection();
+
+        std::string rec = "{";
+        rec += "\"function\":\"" + function + "\",";
+        rec += "\"primary_variable\":\"" + std::string(1, primary_variable) + "\",";
+        rec += "\"integration_target\":" + std::to_string(integration_target) + ",";
+        rec += "\"variable_map\":{";
+        for (auto& kv : variable_map) {
+            rec += "\"" + std::string(1, kv.first) + "\":" + std::to_string(kv.second) + ",";
+        }
+        if (!variable_map.empty()) rec.pop_back();
+        rec += "},";
+        rec += "\"solution\":" + std::to_string(solution[0]);
+        rec += "}";
+
+        uint32_t len = static_cast<uint32_t>(rec.size());
+        log_file.write(reinterpret_cast<char*>(&len), sizeof(len));
+        log_file.write(rec.data(), rec.size());
+        log_file.flush();
     }
 
     SolverAPI::destroy();
